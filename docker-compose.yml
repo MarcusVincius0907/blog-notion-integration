@@ -1,0 +1,49 @@
+version: "3"
+
+services:
+  nodeapp:
+    build:
+      context: ./nubank-integration-service/node-nubank-service
+    ports:
+      - "3000"
+    networks:
+      - nubank-network
+    environment:
+      APP_PYTHON: pythonapp
+
+  pythonapp:
+    build:
+      context: ./nubank-integration-service/python-nubank-service
+    ports:
+      - "5000"
+    networks:
+      - nubank-network
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27017"
+    networks:
+      - nubank-network
+    volumes:
+      - mongodb_data:/data/db
+
+  financial-helper:
+    build:
+      context: ./
+    ports:
+      - "3001:3001"
+    networks:
+      - nubank-network
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URL: mongodb://mongodb:27017
+      NUBANK_INTEGRATION_URL: http://nodeapp:3000
+
+networks:
+  nubank-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
